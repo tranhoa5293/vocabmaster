@@ -4,9 +4,9 @@ import com.softfine.vocabmaster.domain.dto.UserVocabularyProgressItem;
 import com.softfine.vocabmaster.domain.entity.User;
 import com.softfine.vocabmaster.domain.entity.UserVocabulary;
 import com.softfine.vocabmaster.domain.entity.UserVocabularyId;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.Instant;

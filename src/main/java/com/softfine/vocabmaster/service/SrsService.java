@@ -1,5 +1,6 @@
 package com.softfine.vocabmaster.service;
 
+import com.softfine.vocabmaster.domain.dto.SrsBatchUpdateItem;
 import com.softfine.vocabmaster.domain.entity.UserScore;
 import com.softfine.vocabmaster.domain.entity.UserVocabulary;
 import com.softfine.vocabmaster.domain.entity.UserVocabularyId;
@@ -10,11 +11,9 @@ import com.softfine.vocabmaster.repository.VocabularyRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
-import com.softfine.vocabmaster.domain.dto.SrsBatchUpdateItem;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 public class SrsService {

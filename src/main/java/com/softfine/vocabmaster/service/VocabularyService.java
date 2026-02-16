@@ -6,14 +6,8 @@ import com.softfine.vocabmaster.domain.dto.StudyStatsResponse;
 import com.softfine.vocabmaster.domain.dto.VocabularyImportRequest;
 import com.softfine.vocabmaster.domain.dto.VocabularyResponse;
 import com.softfine.vocabmaster.domain.entity.*;
-import com.softfine.vocabmaster.repository.CollectionRepository;
-import com.softfine.vocabmaster.repository.LessonRepository;
-import com.softfine.vocabmaster.repository.UserEnrollCollectionRepository;
-import com.softfine.vocabmaster.repository.UserEnrollRepository;
-import com.softfine.vocabmaster.repository.UserVocabularyRepository;
-import com.softfine.vocabmaster.repository.VocabularyRepository;
-import com.softfine.vocabmaster.service.UserCurrentActivityService;
-import org.springframework.cache.annotation.CacheEvict;
+import com.softfine.vocabmaster.repository.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class VocabularyService {
 
     private final CollectionRepository collectionRepository;
@@ -33,24 +28,7 @@ public class VocabularyService {
     private final UserVocabularyRepository userVocabularyRepository;
     private final CurrentUserService currentUserService;
     private final UserCurrentActivityService userCurrentActivityService;
-
-    public VocabularyService(CollectionRepository collectionRepository,
-                             LessonRepository lessonRepository,
-                             UserEnrollCollectionRepository userEnrollCollectionRepository,
-                             UserEnrollRepository userEnrollRepository,
-                             VocabularyRepository vocabularyRepository,
-                             UserVocabularyRepository userVocabularyRepository,
-                             CurrentUserService currentUserService,
-                             UserCurrentActivityService userCurrentActivityService) {
-        this.collectionRepository = collectionRepository;
-        this.lessonRepository = lessonRepository;
-        this.userEnrollCollectionRepository = userEnrollCollectionRepository;
-        this.userEnrollRepository = userEnrollRepository;
-        this.vocabularyRepository = vocabularyRepository;
-        this.userVocabularyRepository = userVocabularyRepository;
-        this.currentUserService = currentUserService;
-        this.userCurrentActivityService = userCurrentActivityService;
-    }
+    private final LessonService lessonService;
 
     @Transactional
     public List<VocabularyResponse> getVocabulary(Long lessonId) {
@@ -75,12 +53,9 @@ public class VocabularyService {
                 .map(vocabularyRepository::save)
                 .toList();
 
-        saved.forEach(vocab -> {
-            UserVocabulary uv = new UserVocabulary(user, vocab);
-            uv.setNextReviewAt(Instant.now());
-            userVocabularyRepository.save(uv);
-        });
-
+        lesson.setTotalWord(vocabularyRepository.countByLessonId(lessonId));
+        lessonRepository.save(lesson);
+        lessonService.evictCache(lesson.getCollection().getId());
         return saved.stream().map(VocabularyResponse::from).toList();
     }
 
@@ -143,8 +118,8 @@ public class VocabularyService {
 
     public StudyStatsResponse getStudyStats() {
         User user = currentUserService.requireCurrentUser();
-        long total = userVocabularyRepository.countByUser(user);
-        long due = userVocabularyRepository.countDueByUser(user, Instant.now());
+        long total = vocabularyRepository.count();
+        long due = total - userVocabularyRepository.countByUser(user) + userVocabularyRepository.countDueByUser(user, Instant.now());
         long mastered = userVocabularyRepository.countMasteredByUser(user, 5);
         return new StudyStatsResponse(total, due, mastered);
     }

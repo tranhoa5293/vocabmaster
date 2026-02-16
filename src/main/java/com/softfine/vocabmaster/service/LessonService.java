@@ -8,6 +8,7 @@ import com.softfine.vocabmaster.domain.entity.User;
 import com.softfine.vocabmaster.repository.CollectionRepository;
 import com.softfine.vocabmaster.repository.FavoriteLessonRepository;
 import com.softfine.vocabmaster.repository.LessonRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
@@ -15,10 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.HashSet;
+import java.util.List;
 
 @Service
+@Slf4j
 public class LessonService {
 
     private final CollectionRepository collectionRepository;
@@ -69,6 +71,11 @@ public class LessonService {
         lesson.setCollection(collection);
         lesson.setName(name);
         return LessonResponse.from(lessonRepository.save(lesson), false);
+    }
+
+    @CacheEvict(value = "lessons", key = "#collectionId")
+    public void evictCache(Long collectionId) {
+        log.info("Evicting cache for collection {}", collectionId);
     }
 
     public boolean toggleFavorite(Long lessonId) {

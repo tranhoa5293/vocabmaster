@@ -1,8 +1,8 @@
 package com.softfine.vocabmaster.controller;
 
+import com.softfine.vocabmaster.domain.dto.SrsBatchUpdateItem;
 import com.softfine.vocabmaster.domain.dto.SrsUpdateRequest;
 import com.softfine.vocabmaster.domain.dto.UserVocabularyResponse;
-import com.softfine.vocabmaster.domain.dto.SrsBatchUpdateItem;
 import com.softfine.vocabmaster.domain.entity.UserVocabulary;
 import com.softfine.vocabmaster.service.SrsService;
 import lombok.AllArgsConstructor;

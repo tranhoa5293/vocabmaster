@@ -10,6 +10,7 @@ import java.util.List;
 public interface VocabularyRepository extends JpaRepository<Vocabulary, Long> {
     List<Vocabulary> findByLesson(Lesson lesson);
     List<Vocabulary> findByLessonId(Long lessonId);
+    long countByLessonId(Long lessonId);
     @Query(value = "select v.* from vocabulary v LEFT JOIN user_vocabulary uv " +
             "  ON uv.vocab_id = v.id AND uv.user_id = :userId " +
             "WHERE v.lesson_id = :lessonId and uv.vocab_id IS NULL " +

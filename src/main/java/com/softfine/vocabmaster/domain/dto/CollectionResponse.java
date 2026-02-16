@@ -1,7 +1,7 @@
 package com.softfine.vocabmaster.domain.dto;
 
-import com.softfine.vocabmaster.domain.entity.Collection;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.softfine.vocabmaster.domain.entity.Collection;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

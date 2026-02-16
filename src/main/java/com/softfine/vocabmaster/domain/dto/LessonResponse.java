@@ -1,7 +1,7 @@
 package com.softfine.vocabmaster.domain.dto;
 
-import com.softfine.vocabmaster.domain.entity.Lesson;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.softfine.vocabmaster.domain.entity.Lesson;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +20,7 @@ public class LessonResponse {
     private boolean favorite;
     @JsonProperty("activeLearners")
     private long enrollCount;
+    private long totalWord;
 
     public static LessonResponse from(Lesson lesson, boolean favorite) {
         return new LessonResponse(
@@ -28,7 +29,8 @@ public class LessonResponse {
                 lesson.getName(),
                 lesson.getFavoriteCount(),
                 favorite,
-                lesson.getEnrollCount()
+                lesson.getEnrollCount(),
+                lesson.getTotalWord()
         );
     }
 }
