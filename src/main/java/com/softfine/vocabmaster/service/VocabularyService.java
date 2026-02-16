@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class VocabularyService {
@@ -56,7 +57,7 @@ public class VocabularyService {
         User user = currentUserService.requireCurrentUser();
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new IllegalArgumentException("Lesson not found"));
-        enrollIfNeeded(user, lesson);
+        enrollIfNeeded(user, lessonId);
         return vocabularyRepository.findByLesson(lesson).stream()
                 .map(VocabularyResponse::from)
                 .toList();
@@ -88,10 +89,10 @@ public class VocabularyService {
         User user = currentUserService.requireCurrentUser();
         Instant now = Instant.now();
         userCurrentActivityService.recordActivity(lessonId, mode);
-
-        if (lessonId == null || userVocabularyRepository.countByUserAndLessonId(user, lessonId) == 0) {
-            initUserVocabulary(user, lessonId, now);
-        }
+//
+//        if (lessonId == null || userVocabularyRepository.countByUserAndLessonId(user, lessonId) == 0) {
+//            initUserVocabulary(user, lessonId, now);
+//        }
         List<UserVocabulary> userVocabularies;
         if (lessonId == null) {
             if (Constant.MODE_MATCH.equals(mode)) {
@@ -101,15 +102,33 @@ public class VocabularyService {
             }
         } else {
             if (Constant.MODE_MATCH.equals(mode)) {
-                userVocabularies = userVocabularyRepository.findDueByUserAndLessonId(user, lessonId, now, PageRequest.of(0, limit));
-            } else {
                 userVocabularies = userVocabularyRepository.findRandomDueByUserAndLessonId(user, lessonId, now, PageRequest.of(0, limit));
+            } else {
+                userVocabularies = userVocabularyRepository.findDueByUserAndLessonId(user, lessonId, now, PageRequest.of(0, limit));
             }
         }
-        return userVocabularies.stream()
+        List<VocabularyResponse> vocabularyResponses = new java.util.ArrayList<>(userVocabularies.stream()
                 .map(UserVocabulary::getVocabulary)
                 .map(VocabularyResponse::from)
-                .toList();
+                .toList());
+        if(userVocabularies.isEmpty()){
+            enrollIfNeeded(user, lessonId);
+        }
+        List<Vocabulary> vocabularies;
+        if (userVocabularies.size() < limit) {
+            if(lessonId == null){
+                vocabularies = vocabularyRepository.findNewWord(user.getId(),limit - userVocabularies.size());
+            } else {
+                vocabularies = vocabularyRepository.findNewWord(user.getId(), lessonId,limit - userVocabularies.size());
+            }
+            if(!vocabularies.isEmpty()){
+                List<VocabularyResponse> newVocabularyResponses = vocabularies.stream()
+                        .map(VocabularyResponse::from)
+                        .toList();
+                vocabularyResponses.addAll(newVocabularyResponses);
+            }
+        }
+        return vocabularyResponses;
     }
 
     public ProgressPageResponse getUserProgress(int page, int size) {
@@ -142,13 +161,19 @@ public class VocabularyService {
                     return uv;
                 })
                 .toList();
-        Lesson lesson = lessonRepository.findById(lessonId == null ? Constant.DEFAULT_LESSON_ID : lessonId)
-                .orElseThrow(() -> new IllegalArgumentException("Lesson not found"));
-        enrollIfNeeded(user, lesson);
+        enrollIfNeeded(user, lessonId);
         userVocabularyRepository.saveAll(items);
     }
 
-    private void enrollIfNeeded(User user, Lesson lesson) {
+    private void enrollIfNeeded(User user, Long lessonId) {
+        if(lessonId == null){
+            return;
+        }
+        Optional<Lesson> lessonOptional = lessonRepository.findById(lessonId);
+        if(lessonOptional.isEmpty()){
+            return;
+        }
+        Lesson lesson = lessonOptional.get();
         if (userEnrollRepository.existsByUserAndLesson(user, lesson)) {
             return;
         }
