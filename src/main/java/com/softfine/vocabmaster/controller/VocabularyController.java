@@ -30,8 +30,9 @@ public class VocabularyController {
     @GetMapping("/due")
     public List<VocabularyResponse> getDueVocabulary(@RequestParam(defaultValue = "10") int limit,
                                                      @RequestParam(required = false) Long lessonId,
+                                                     @RequestParam(required = false) Long collectionId,
                                                      @RequestParam(required = false) String mode) {
-        return vocabularyService.getDueVocabulary(limit, lessonId, mode);
+        return vocabularyService.getDueVocabulary(limit, lessonId, collectionId, mode);
     }
 
     @GetMapping("/progress")

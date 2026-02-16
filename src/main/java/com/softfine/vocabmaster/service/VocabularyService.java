@@ -60,7 +60,7 @@ public class VocabularyService {
     }
 
     @Transactional
-    public List<VocabularyResponse> getDueVocabulary(int limit, Long lessonId, String mode) {
+    public List<VocabularyResponse> getDueVocabulary(int limit, Long lessonId, Long collectionId, String mode) {
         User user = currentUserService.requireCurrentUser();
         Instant now = Instant.now();
         userCurrentActivityService.recordActivity(lessonId, mode);
@@ -69,32 +69,40 @@ public class VocabularyService {
 //            initUserVocabulary(user, lessonId, now);
 //        }
         List<UserVocabulary> userVocabularies;
-        if (lessonId == null) {
+        if (lessonId == null && collectionId == null) {
             if (Constant.MODE_MATCH.equals(mode)) {
                 userVocabularies = userVocabularyRepository.findRandomDueByUser(user, now, PageRequest.of(0, limit));
             } else {
                 userVocabularies = userVocabularyRepository.findDueByUser(user, now, PageRequest.of(0, limit));
             }
-        } else {
+        } else if (lessonId != null) {
             if (Constant.MODE_MATCH.equals(mode)) {
                 userVocabularies = userVocabularyRepository.findRandomDueByUserAndLessonId(user, lessonId, now, PageRequest.of(0, limit));
             } else {
                 userVocabularies = userVocabularyRepository.findDueByUserAndLessonId(user, lessonId, now, PageRequest.of(0, limit));
+            }
+        } else {
+            if (Constant.MODE_MATCH.equals(mode)) {
+                userVocabularies = userVocabularyRepository.findRandomDueByUserAndCollectionId(user, collectionId, now, PageRequest.of(0, limit));
+            } else {
+                userVocabularies = userVocabularyRepository.findDueByUserAndCollectionId(user, collectionId, now, PageRequest.of(0, limit));
             }
         }
         List<VocabularyResponse> vocabularyResponses = new java.util.ArrayList<>(userVocabularies.stream()
                 .map(UserVocabulary::getVocabulary)
                 .map(VocabularyResponse::from)
                 .toList());
-        if(userVocabularies.isEmpty()){
+        if(userVocabularies.isEmpty() && lessonId != null){
             enrollIfNeeded(user, lessonId);
         }
         List<Vocabulary> vocabularies;
         if (userVocabularies.size() < limit) {
-            if(lessonId == null){
-                vocabularies = vocabularyRepository.findNewWord(user.getId(),limit - userVocabularies.size());
-            } else {
+            if(lessonId != null){
                 vocabularies = vocabularyRepository.findNewWord(user.getId(), lessonId,limit - userVocabularies.size());
+            } else if (collectionId != null) {
+                vocabularies = vocabularyRepository.findNewWordByCollection(user.getId(), collectionId,limit - userVocabularies.size());
+            } else {
+                vocabularies = vocabularyRepository.findNewWord(user.getId(),limit - userVocabularies.size());
             }
             if(!vocabularies.isEmpty()){
                 List<VocabularyResponse> newVocabularyResponses = vocabularies.stream()

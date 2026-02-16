@@ -42,6 +42,9 @@ public interface UserVocabularyRepository extends JpaRepository<UserVocabulary, 
     @Query("select count(uv) from UserVocabulary uv where uv.user = :user and uv.vocabulary.lesson.id = :lessonId")
     long countByUserAndLessonId(User user, Long lessonId);
 
+    @Query("select count(uv) from UserVocabulary uv where uv.user = :user and uv.vocabulary.lesson.collection.id = :collectionId")
+    long countByUserAndCollectionId(User user, Long collectionId);
+
     @Query("select count(uv) from UserVocabulary uv where uv.user = :user and (uv.nextReviewAt is null or uv.nextReviewAt <= :now)")
     long countDueByUser(User user, Instant now);
 
@@ -50,6 +53,12 @@ public interface UserVocabularyRepository extends JpaRepository<UserVocabulary, 
 
     @Query("select uv from UserVocabulary uv join fetch uv.vocabulary v where uv.user = :user and v.lesson.id = :lessonId and (uv.nextReviewAt is null or uv.nextReviewAt <= :now)")
     List<UserVocabulary> findDueByUserAndLessonId(User user, Long lessonId, Instant now, Pageable pageable);
+
+    @Query("select uv from UserVocabulary uv join fetch uv.vocabulary v where uv.user = :user and v.lesson.collection.id = :collectionId and (uv.nextReviewAt is null or uv.nextReviewAt <= :now)")
+    List<UserVocabulary> findDueByUserAndCollectionId(User user, Long collectionId, Instant now, Pageable pageable);
+
+    @Query("select uv from UserVocabulary uv join fetch uv.vocabulary v where uv.user = :user and v.lesson.collection.id = :collectionId and (uv.nextReviewAt is null or uv.nextReviewAt <= :now) order by random()")
+    List<UserVocabulary> findRandomDueByUserAndCollectionId(User user, Long collectionId, Instant now, Pageable pageable);
 
     @Query("select uv from UserVocabulary uv join fetch uv.vocabulary v where uv.user = :user and v.lesson.id = :lessonId and (uv.nextReviewAt is null or uv.nextReviewAt <= :now) order by RANDOM()")
     List<UserVocabulary> findRandomDueByUserAndLessonId(User user, Long lessonId, Instant now, Pageable pageable);

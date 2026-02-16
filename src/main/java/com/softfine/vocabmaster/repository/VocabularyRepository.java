@@ -10,6 +10,7 @@ import java.util.List;
 public interface VocabularyRepository extends JpaRepository<Vocabulary, Long> {
     List<Vocabulary> findByLesson(Lesson lesson);
     List<Vocabulary> findByLessonId(Long lessonId);
+    List<Vocabulary> findByLessonCollectionId(Long collectionId);
     long countByLessonId(Long lessonId);
     @Query(value = "select v.* from vocabulary v LEFT JOIN user_vocabulary uv " +
             "  ON uv.vocab_id = v.id AND uv.user_id = :userId " +
@@ -24,4 +25,13 @@ public interface VocabularyRepository extends JpaRepository<Vocabulary, Long> {
             "ORDER BY random() " +
             "LIMIT :limit", nativeQuery = true)
     List<Vocabulary> findNewWord(Long userId, long limit);
+
+    @Query(value = "select v.* from vocabulary v " +
+            "join lessons l on l.id = v.lesson_id " +
+            "LEFT JOIN user_vocabulary uv " +
+            "  ON uv.vocab_id = v.id AND uv.user_id = :userId " +
+            "WHERE l.collection_id = :collectionId and uv.vocab_id IS NULL " +
+            "ORDER BY random() " +
+            "LIMIT :limit", nativeQuery = true)
+    List<Vocabulary> findNewWordByCollection(Long userId, Long collectionId, long limit);
 }
