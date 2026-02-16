@@ -62,7 +62,6 @@ public class VocabularyService {
                 .toList();
     }
 
-    @CacheEvict(value = "lessons", key = "'all'")
     public List<VocabularyResponse> importVocabulary(Long lessonId, List<VocabularyImportRequest> items) {
         User user = currentUserService.requireCurrentUser();
         Lesson lesson = lessonRepository.findById(lessonId)
